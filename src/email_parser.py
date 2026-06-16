@@ -1,8 +1,7 @@
 from pydantic import BaseModel
-
+from typing import Optional
 
 class EmailResponse(BaseModel):
-
-    subject: str
-    email_body: str
-    tone: str
+    subject: Optional[str] = "No Subject Generated"
+    email: Optional[str] = "No Email Generated"
+    tone: Optional[str] = "Professional"

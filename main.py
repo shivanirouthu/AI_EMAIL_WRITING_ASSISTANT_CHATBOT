@@ -1,73 +1,39 @@
+from src.prompt import prompt
 from src.model import llm
-from src.schema import EmailResponse
-from src.prompt import prompt, lf_prompt
-
+from src.email_parser import EmailResponse
 from langchain_core.output_parsers import PydanticOutputParser
+from langfuse import Langfuse
 
-import json
+langfuse = Langfuse()
 
-# Parser
 parser = PydanticOutputParser(
     pydantic_object=EmailResponse
 )
 
-# Chain
 chain = prompt | llm | parser
 
 
-def generate_email(email_request: str):
+def generate_email(email_request):
 
-    metadata = {
-        "project":
-        "AI Email Writing Assistance Chatbot"
+    trace = langfuse.trace(
+        name="email-generation"
+    )
+
+    payload = {
+        "email_request": email_request,
+        "format_instructions": parser.get_format_instructions()
     }
 
-    if lf_prompt:
+    result = chain.invoke(payload)
 
-        metadata.update({
-
-            "prompt_name":
-            lf_prompt.name,
-
-            "prompt_version":
-            str(lf_prompt.version)
-        })
-
-    result = chain.invoke(
-
-        {
-            "email_request": email_request,
-
-            "format_instructions":
-            parser.get_format_instructions()
-        },
-
-        config={
-
-            "tags": [
-                "ai-email-assistant"
-            ],
-
-            "metadata": metadata
-        }
+    trace.update(
+        input=payload,
+        output=result.model_dump()
     )
+
+    langfuse.flush()
+
+    print("RESULT TYPE:", type(result))
+    print("RESULT:", result)
 
     return result
-
-
-if __name__ == "__main__":
-
-    email_request = input(
-        "Enter your email request: "
-    )
-
-    output = generate_email(
-        email_request
-    )
-
-    print(
-        json.dumps(
-            output.model_dump(),
-            indent=4
-        )
-    )
