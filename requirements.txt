@@ -1,6 +1,7 @@
-langchain
-langchain-openai
-langfuse
-python-dotenv
 streamlit
+python-dotenv
 pydantic
+langchain
+langchain-core
+langchain-groq
+langfuse
